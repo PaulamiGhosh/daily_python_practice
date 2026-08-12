@@ -7,9 +7,11 @@ requires-python = ">=3.14"
 dependencies = [
     "jupyter>=1.1.1",
     "jupyterlab>=4.6.2",
+    "jupyterlab-lsp>=5.3.0",
     "lab>=8.10",
     "numpy>=2.5.1",
     "pandas>=3.0.5",
+    "python-lsp-server>=1.15.0",
 ]
 
 [project.scripts]
