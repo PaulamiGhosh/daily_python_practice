@@ -1,0 +1,66 @@
+import numpy as np
+import pandas as pd
+
+#-----------------------------------------
+#---------dataset creation----------------
+#-----------------------------------------
+np.random.seed(42)
+
+sites = ["East Kolkata Wetlands", "Sundarban Fringe", "Nalban", "Santragachi"]
+species = ["Egret", "Kingfisher", "Heron", "Cormorant", "Ibis", "Pied Hornbill"]
+
+dates = pd.date_range("2025-01-01", "2025-06-01", freq="MS")
+
+rows = []
+
+for date in dates:
+    for site in sites:
+        for sp in species:
+            rows.append({
+                "date": date,
+                "site": site,
+                "species": sp,
+                "count": np.random.poisson(
+                    np.random.uniform(5, 30)
+                ),
+                "observation_hours": np.random.uniform(2, 8)
+            })
+
+birds = pd.DataFrame(rows)
+
+# Introduce some missing observations
+missing_idx = np.random.choice(
+    birds.index,
+    size=12,
+    replace=False
+)
+
+birds.loc[missing_idx, "count"] = np.nan
+
+birds.head()
+
+#-----------------------------------------
+#---------birds dataset analysis----------
+#-----------------------------------------
+
+birds.info()
+birds.describe()
+birds['count'].unique()
+birds[birds['count'].isna()]
+birds.fillna(birds['count'].mean(), inplace=True)
+birds['month'] = birds['date'].dt.month
+birds['day_name'] = birds['date'].dt.day_name()
+birds['density'] = birds['count'] / birds['observation_hours']
+birds.head()
+birds[birds['count']>birds['count'].mean()]
+birds.query('species == "Egret" | species =="Kingfisher" | species == "Heron" | species == "Cormorant" | species == "Ibis"').where(birds['count'] > birds['count'].mean()).dropna()
+birds.query('species == "Kingfisher"').where(birds['site'] == 'Nalban').dropna().sort_values(by='date',ascending=False)
+birds.where(birds['observation_hours']>=birds['observation_hours'].quantile(0.9)).dropna()
+birds['observation_hours'].quantile([0.25,0.5,0.75,0.9])
+birds.groupby(['site','species'])['count'].agg(['min','max','mean','sum']).sort_values(by=['site','sum'] ,ascending=[True,False] )
+birds.groupby('species')['count'].agg(['max','min','std'])
+birds.groupby(['site','month'])['count'].agg(['sum']).sort_values(by=['site','sum'],ascending=[True,False])
+birds_pivot = pd.pivot_table(birds, index='site', columns='species',values='count',aggfunc='sum')
+print(birds_pivot)
+ovser_pivot = pd.pivot_table(birds,index='site',columns='species',values='observation_hours',aggfunc='mean')
+print(ovser_pivot)
